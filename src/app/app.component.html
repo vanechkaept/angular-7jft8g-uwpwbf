@@ -1,0 +1,20 @@
+<button (click)="addNode()">addNode</button>
+<button (click)="addNode(nodes[2].child)">addNode 2</button>
+<button (click)="emit(expandAll)">expand all</button>
+<button (click)="collapseAll.next()">collapsed all</button>
+
+<my-com
+  [nodes]="nodes"
+  [collapseAllSubject]="collapseAll"
+  [expandAllSubject]="expandAll"
+  [content]="itemContent"
+  [expanded]="true"
+></my-com>
+
+<ng-template #itemContent let-data>
+  {{ data.id }}
+</ng-template>
+
+<pre *ngIf="nodes">
+  {{ nodes | json }}
+</pre>

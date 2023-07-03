@@ -1,0 +1,161 @@
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  HostBinding,
+  Input,
+  TemplateRef,
+} from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs/internal/Rx';
+import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
+
+@Component({
+  selector: 'my-com',
+  templateUrl: './com.component.html',
+  styleUrls: ['./com.component.less'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ComComponent<T> {
+  @Input() nodes!: TreeMultidimensionalArray<T>;
+  @Input() selectable = false;
+  @Input() level = 0;
+  @Input() childKey: keyof T | 'child' = 'child';
+  @Input() showBorder = false;
+  @Input() expandAllSubject = new Subject<void>();
+  @Input() collapseAllSubject = new Subject<void>();
+  @Input() expanded: boolean | null = false;
+  @Input() content!: TemplateRef<unknown>;
+  @Input() pseudoChild: TemplateRef<unknown> | undefined;
+  @Input() canHover = true;
+  /** Stretch content */
+  @Input() stretchContent = false;
+  // unique key from nodes
+  @Input() uniqueField: keyof T;
+  // доработать как примитив, будут отправяться значение уникального поля
+  @Input() openToFieldSubject: Subject<TreeMultidimensional<T>>;
+
+  @Input() trackBy: (i: number, item: T) => unknown =
+    ComComponent._defaultTrackBy;
+
+  readonly randomColor = 'rgb(var(--color-on-background), .1)';
+
+  private _expandedNodes = new Set<string>();
+
+  private readonly _check$ = new BehaviorSubject<TreeMultidimensionalArray<T>>(
+    []
+  );
+
+  private static _defaultTrackBy = (index: number) => index;
+
+  readonly nodes$ = this._check$.pipe(
+    tap(() => console.log('distinctUntilChanged')),
+    distinctUntilChanged((prev, curr) => {
+      // const prevCopy = prev.map((item) =>
+      //   removeKeyFromObject(item, this.childKey)
+      // );
+      // const currCopy = curr.map((item) =>
+      //   removeKeyFromObject(item, this.childKey)
+      // );
+      // console.log('--prevCopy', prevCopy);
+      // console.log('--currCopy', currCopy);
+      // return JSON.stringify(prevCopy) === JSON.stringify(currCopy);
+      return JSON.stringify(prev) === JSON.stringify(curr);
+    }),
+    tap(() => console.log('updated'))
+  );
+
+  constructor(private _cdr: ChangeDetectorRef) {}
+
+  ngDoCheck(): void {
+    this.checkChanges();
+  }
+
+  checkChanges(): void {
+    const d = JSON.parse(JSON.stringify(this.nodes));
+    this._check$.next(d);
+    // this.item?.checkChanges();
+    // this.child?.checkChanges();
+  }
+
+  ngOnInit() {
+    this.collapseAllSubject.subscribe(() => this.collapseAll());
+    this.expandAllSubject.subscribe(() => this.expandAll());
+    // this.openToFieldSubject.subscribe(() => thi);
+
+    if (!!this.expanded) {
+      this.expandAll();
+    }
+  }
+
+  @HostBinding('class')
+  get levelClass() {
+    return `level-${this.level}`;
+  }
+
+  getChildNodes(
+    nodes: TreeMultidimensional<T>
+  ): TreeMultidimensionalArray<T> | undefined {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return nodes[this.childKey] || undefined;
+  }
+
+  toggleNode(nodes: TreeMultidimensional<T>) {
+    const nodeWithoutChildren = this._getNodeWithoutChildren(nodes);
+
+    if (this.nodeExpanded(nodeWithoutChildren)) {
+      this._expandedNodes.delete(JSON.stringify(nodeWithoutChildren));
+    } else {
+      this._expandedNodes.add(JSON.stringify(nodeWithoutChildren));
+    }
+  }
+
+  nodeExpanded(node: TreeMultidimensional<T>): boolean {
+    const nodeWithoutChildren = this._getNodeWithoutChildren(node);
+    return this._expandedNodes.has(JSON.stringify(nodeWithoutChildren));
+  }
+
+  expandAll() {
+    for (const node of this.nodes) {
+      if (!this.nodeExpanded(node)) {
+        const nodeWithoutChildren = this._getNodeWithoutChildren(node);
+        this._expandedNodes.add(JSON.stringify(nodeWithoutChildren));
+      }
+    }
+    this._cdr.markForCheck();
+  }
+
+  collapseAll() {
+    this._expandedNodes.clear();
+    this._cdr.markForCheck();
+  }
+
+  private _getNodeWithoutChildren(
+    node: TreeMultidimensional<T>
+  ): TreeMultidimensional<T> {
+    const nodeWithoutChildren: TreeMultidimensional<T> = { ...node };
+    if ((nodeWithoutChildren as never)[this.childKey]) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      delete nodeWithoutChildren[this.childKey];
+    }
+    return nodeWithoutChildren;
+  }
+}
+
+export type TreeMultidimensional<T> = T & {
+  child?: TreeMultidimensionalArray<T>;
+};
+export type TreeMultidimensionalArray<T> = Array<TreeMultidimensional<T>>;
+
+function removeKeyFromObject<T>(
+  a: TreeMultidimensional<T>,
+  b: keyof T | 'child'
+) {
+  if (typeof a === 'object' && typeof b === 'string') {
+    const { [b]: removedKey, ...updatedObject } = a;
+    return updatedObject;
+  } else {
+    return a;
+  }
+}

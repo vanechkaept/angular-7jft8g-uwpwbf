@@ -1,0 +1,53 @@
+<ul
+  class="set"
+  [class.tree-border]="showBorder"
+  [class.tree-root]="level === 0"
+>
+  <li *ngFor="let node of nodes$ | async; trackBy: trackBy">
+    <div class="tree-content">
+      <div class="flex w-6">
+        <button
+          *ngIf="getChildNodes(node)?.length"
+          class="tree-dropdown-icon"
+          [class.rotate-90]="nodeExpanded(node)"
+          (click)="toggleNode(node)"
+        >
+          >
+        </button>
+      </div>
+      <div
+        class="tree-dynamic-content"
+        [class.hover]="canHover"
+        [class.w-full]="stretchContent"
+      >
+        <ng-container
+          *ngTemplateOutlet="content; context: { $implicit: node }"
+        ></ng-container>
+      </div>
+    </div>
+    <div *ngIf="pseudoChild" class="tree-pseudo-child tree-list flex flex-row">
+      <div class="flex w-6"></div>
+      <ng-container
+        *ngTemplateOutlet="pseudoChild; context: { $implicit: node }"
+      ></ng-container>
+    </div>
+    <div class="tree-list" *ngIf="nodeExpanded(node)">
+      <my-com
+        *ngIf="getChildNodes(node) as childNode"
+        [canHover]="canHover"
+        [childKey]="childKey"
+        [collapseAllSubject]="collapseAllSubject"
+        [content]="content"
+        [expandAllSubject]="expandAllSubject"
+        [expanded]="expanded"
+        [level]="level + 1"
+        [nodes]="childNode"
+        [pseudoChild]="pseudoChild"
+        [selectable]="selectable"
+        [showBorder]="showBorder"
+        [stretchContent]="stretchContent"
+        [trackBy]="trackBy"
+      ></my-com>
+    </div>
+  </li>
+</ul>
