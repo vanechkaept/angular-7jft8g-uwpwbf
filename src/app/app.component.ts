@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Subject } from 'rxjs';
-import { TreeMultidimensionalArray } from './com/com.component';
+import { TreeMultidimensionalArray } from './tree/tree-view.component';
 
 @Component({
   selector: 'my-app',

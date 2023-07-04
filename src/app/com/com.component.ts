@@ -8,6 +8,11 @@ import {
 } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs/internal/Rx';
 import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
+import {
+  TreeMultidimensional,
+  TreeMultidimensionalQuik,
+  TreeMultidimensionalQuikArray,
+} from '../tree/tree-view.component';
 
 @Component({
   selector: 'my-com',
@@ -16,7 +21,7 @@ import { distinctUntilChanged, map, startWith, tap } from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComComponent<T> {
-  @Input() nodes!: TreeMultidimensionalArray<T>;
+  @Input() nodes!: TreeMultidimensionalQuikArray<T>;
   @Input() selectable = false;
   @Input() level = 0;
   @Input() childKey: keyof T | 'child' = 'child';
@@ -34,16 +39,16 @@ export class ComComponent<T> {
   // доработать как примитив, будут отправяться значение уникального поля
   @Input() openToFieldSubject: Subject<number | string>;
 
+  @Input() expandedNodes: Set<string>;
+
   @Input() trackBy: (i: number, item: T) => unknown =
     ComComponent._defaultTrackBy;
 
   readonly randomColor = 'rgb(var(--color-on-background), .1)';
 
-  private _expandedNodes = new Set<string>();
-
-  private readonly _check$ = new BehaviorSubject<TreeMultidimensionalArray<T>>(
-    []
-  );
+  private readonly _check$ = new BehaviorSubject<
+    TreeMultidimensionalQuikArray<T>
+  >([]);
 
   private static _defaultTrackBy = (index: number) => index;
 
@@ -78,17 +83,15 @@ export class ComComponent<T> {
   }
 
   ngOnInit() {
-    this.collapseAllSubject.subscribe(() => this.collapseAll());
-    this.expandAllSubject.subscribe(() => this.expandAll());
+    // this.collapseAllSubject.subscribe(() => this.collapseAll());
+    // this.expandAllSubject.subscribe(() => this.expandAll());
     // this.openToFieldSubject.subscribe(() => this.expan);
-
-    if (!!this.expanded) {
-      this.expandAll();
-    }
-
-    this.openToFieldSubject.subscribe((fieldValue) => {
-      this.openToNode(fieldValue);
-    });
+    // if (!!this.expanded) {
+    //   this.expandAll();
+    // }
+    // this.openToFieldSubject.subscribe((fieldValue) => {
+    //   this.openToNode(fieldValue);
+    // });
   }
 
   // openToField(searchebleFiled: number | string){
@@ -104,47 +107,44 @@ export class ComComponent<T> {
   }
 
   getChildNodes(
-    nodes: TreeMultidimensional<T>
-  ): TreeMultidimensionalArray<T> | undefined {
+    nodes: TreeMultidimensionalQuik<T>
+  ): TreeMultidimensionalQuikArray<T> | undefined {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return nodes[this.childKey] || undefined;
   }
 
-  toggleNode(nodes: TreeMultidimensional<T>) {
-    const nodeWithoutChildren = this._getNodeWithoutChildren(nodes);
-
-    if (this.nodeExpanded(nodeWithoutChildren)) {
-      this._expandedNodes.delete(JSON.stringify(nodeWithoutChildren));
+  toggleNode(node: TreeMultidimensionalQuik<T>) {
+    if (this.nodeExpanded(node)) {
+      this.expandedNodes.delete(JSON.stringify(node.quikTreeId + ''));
     } else {
-      this._expandedNodes.add(JSON.stringify(nodeWithoutChildren));
+      this.expandedNodes.add(JSON.stringify(node.quikTreeId + ''));
     }
   }
 
-  nodeExpanded(node: TreeMultidimensional<T>): boolean {
-    const nodeWithoutChildren = this._getNodeWithoutChildren(node);
-    return this._expandedNodes.has(JSON.stringify(nodeWithoutChildren));
+  nodeExpanded(node: TreeMultidimensionalQuik<T>): boolean {
+    return this.expandedNodes.has(node.quikTreeId + '');
   }
 
-  expandAll() {
-    for (const node of this.nodes) {
-      if (!this.nodeExpanded(node)) {
-        const nodeWithoutChildren = this._getNodeWithoutChildren(node);
-        this._expandedNodes.add(JSON.stringify(nodeWithoutChildren));
-      }
-    }
-    this._cdr.markForCheck();
-  }
+  // expandAll() {
+  //   for (const node of this.nodes) {
+  //     if (!this.nodeExpanded(node)) {
+  //       const nodeWithoutChildren = this._getNodeWithoutChildren(node);
+  //       this.expandedNodes.add(JSON.stringify(nodeWithoutChildren));
+  //     }
+  //   }
+  //   this._cdr.markForCheck();
+  // }
 
-  collapseAll() {
-    this._expandedNodes.clear();
-    this._cdr.markForCheck();
-  }
+  // collapseAll() {
+  //   this.expandedNodes.clear();
+  //   this._cdr.markForCheck();
+  // }
 
   private _getNodeWithoutChildren(
-    node: TreeMultidimensional<T>
-  ): TreeMultidimensional<T> {
-    const nodeWithoutChildren: TreeMultidimensional<T> = { ...node };
+    node: TreeMultidimensionalQuik<T>
+  ): TreeMultidimensionalQuik<T> {
+    const nodeWithoutChildren: TreeMultidimensionalQuik<T> = { ...node };
     if ((nodeWithoutChildren as never)[this.childKey]) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -155,78 +155,61 @@ export class ComComponent<T> {
 
   //////////////////
 
-  private openToNode(fieldValue: number | string) {
-    const flattenedNodes: TreeMultidimensionalArray<T> = this.flattenTree(
-      this.nodes
-    );
-    const node = flattenedNodes.find(
-      (item) => (item[this.uniqueField] as any) === fieldValue
-    );
+  // private openToNode(fieldValue: number | string) {
+  //   const flattenedNodes: TreeMultidimensionalArray<T> = this.flattenTree(
+  //     this.nodes
+  //   );
+  //   const node = flattenedNodes.find(
+  //     (item) => (item[this.uniqueField] as any) === fieldValue
+  //   );
 
-    if (node) {
-      const pathToNode = this.getPathToNode(flattenedNodes, node);
-      this.expandPath(pathToNode);
-    }
-  }
+  //   if (node) {
+  //     const pathToNode = this.getPathToNode(flattenedNodes, node);
+  //     this.expandPath(pathToNode);
+  //   }
+  // }
 
-  private flattenTree(
-    nodes: TreeMultidimensionalArray<T>
-  ): TreeMultidimensionalArray<T> {
-    let flattenedNodes: TreeMultidimensional<T>[] = [];
+  // private flattenTree(
+  //   nodes: TreeMultidimensionalArray<T>
+  // ): TreeMultidimensionalArray<T> {
+  //   let flattenedNodes: TreeMultidimensional<T>[] = [];
 
-    for (const node of nodes) {
-      flattenedNodes.push(node);
+  //   for (const node of nodes) {
+  //     flattenedNodes.push(node);
 
-      const childNodes = this.getChildNodes(node);
-      if (childNodes) {
-        flattenedNodes = flattenedNodes.concat(this.flattenTree(childNodes));
-      }
-    }
+  //     const childNodes = this.getChildNodes(node);
+  //     if (childNodes) {
+  //       flattenedNodes = flattenedNodes.concat(this.flattenTree(childNodes));
+  //     }
+  //   }
 
-    return flattenedNodes;
-  }
+  //   return flattenedNodes;
+  // }
 
-  private getPathToNode(
-    flattenedNodes: TreeMultidimensional<T>[],
-    node: TreeMultidimensional<T>
-  ): TreeMultidimensional<T>[] {
-    const path: TreeMultidimensional<T>[] = [];
-    let currentNode: TreeMultidimensional<T> | undefined = node;
+  // private getPathToNode(
+  //   flattenedNodes: TreeMultidimensional<T>[],
+  //   node: TreeMultidimensional<T>
+  // ): TreeMultidimensional<T>[] {
+  //   const path: TreeMultidimensional<T>[] = [];
+  //   let currentNode: TreeMultidimensional<T> | undefined = node;
 
-    while (currentNode) {
-      path.unshift(currentNode);
-      const parentNode = flattenedNodes.find(
-        (item) => item[this.uniqueField] === currentNode![this.childKey]
-      );
-      currentNode = parentNode;
-    }
+  //   while (currentNode) {
+  //     path.unshift(currentNode);
+  //     const parentNode = flattenedNodes.find(
+  //       (item) => item[this.uniqueField] === currentNode![this.childKey]
+  //     );
+  //     currentNode = parentNode;
+  //   }
 
-    return path;
-  }
+  //   return path;
+  // }
 
-  private expandPath(path: TreeMultidimensional<T>[]) {
-    this.collapseAll();
+  // private expandPath(path: TreeMultidimensional<T>[]) {
+  //   this.collapseAll();
 
-    for (const node of path) {
-      const nodeWithoutChildren = this._getNodeWithoutChildren(node);
-      this._expandedNodes.add(JSON.stringify(nodeWithoutChildren));
-    }
-  }
-}
-
-export type TreeMultidimensional<T> = T & {
-  child?: TreeMultidimensionalArray<T>;
-};
-export type TreeMultidimensionalArray<T> = Array<TreeMultidimensional<T>>;
-
-function removeKeyFromObject<T>(
-  a: TreeMultidimensional<T>,
-  b: keyof T | 'child'
-) {
-  if (typeof a === 'object' && typeof b === 'string') {
-    const { [b]: removedKey, ...updatedObject } = a;
-    return updatedObject;
-  } else {
-    return a;
-  }
+  //   for (const node of path) {
+  //     const nodeWithoutChildren = this._getNodeWithoutChildren(node);
+  //     this.expandedNodes.add(JSON.stringify(nodeWithoutChildren));
+  //   }
+  // }
 }
