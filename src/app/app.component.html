@@ -2,7 +2,8 @@
 <button (click)="addNode(nodes[2].child)">addNode 2</button>
 <button (click)="emit(expandAll)">expand all</button>
 <button (click)="collapseAll.next()">collapsed all</button>
-<!-- <input [(ngModel)]="input" /> -->
+
+<input [(ngModel)]="input" />
 <button (click)="findById()">find by id</button>
 
 <my-tree-view
@@ -18,5 +19,3 @@
 <ng-template #itemContent let-data>
   {{ data.id }}
 </ng-template>
-
-

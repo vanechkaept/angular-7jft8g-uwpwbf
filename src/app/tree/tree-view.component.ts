@@ -31,14 +31,16 @@ export class TreeViewComponent<T> {
   // unique key from nodes
   @Input() uniqueField: keyof T;
   // доработать как примитив, будут отправяться значение уникального поля
-  @Input() openToFieldSubject: Subject<number | string>;
+  @Input() openToFieldSubject: Subject<number>;
 
   @Input() trackBy: (i: number, item: T) => unknown =
     TreeViewComponent._defaultTrackBy;
 
-  expandedNodes = new Set<string>();
+  expandedNodes = new Set<number>();
 
   index = 0;
+
+  _nodes: TreeMultidimensionalQuikArray<T> = [];
 
   private readonly _check$ = new BehaviorSubject<TreeMultidimensionalArray<T>>(
     []
@@ -48,7 +50,7 @@ export class TreeViewComponent<T> {
 
   readonly nodes$: Observable<TreeMultidimensionalQuikArray<T>> =
     this._check$.pipe(
-      tap(() => console.log('distinctUntilChanged')),
+      tap(() => console.log('distinctUntilChanged TreeViewComponent')),
       distinctUntilChanged((prev, curr) => {
         return JSON.stringify(prev) === JSON.stringify(curr);
       }),
@@ -56,7 +58,10 @@ export class TreeViewComponent<T> {
         this.index = 0;
         return this.prepareNodesToQuikTreeModal(nodes);
       }),
-      tap(() => console.log('updated'))
+      tap((nodes) => {
+        this._nodes = nodes;
+        console.log('updated TreeViewComponent');
+      })
     );
 
   constructor(private _cdr: ChangeDetectorRef) {}
@@ -102,15 +107,61 @@ export class TreeViewComponent<T> {
   }
 
   ngOnInit() {
-    // this.collapseAllSubject.subscribe(() => this.collapseAll());
-    // this.expandAllSubject.subscribe(() => this.expandAll());
-    // // this.openToFieldSubject.subscribe(() => this.expan);
-    // if (!!this.expanded) {
-    //   this.expandAll();
-    // }
-    // this.openToFieldSubject.subscribe((fieldValue) => {
-    //   this.openToNode(fieldValue);
-    // });
+    this.collapseAllSubject.subscribe(() => {
+      this.expandedNodes.clear();
+      this._cdr.markForCheck();
+    });
+
+    this.expandAllSubject.subscribe(() => {
+      for (let i = 0; this.index > i; i++) {
+        this.expandedNodes.add(i);
+      }
+      this._cdr.markForCheck();
+    });
+
+    this.openToFieldSubject?.subscribe((value) => {
+      const d = this.getQuikTreeIdsById(value, this._nodes);
+    });
+  }
+
+  getQuikTreeIdsById<T>(
+    id: number,
+    data: TreeMultidimensionalQuikArray<T>
+  ): number[] | null {
+    const result: number[] = [];
+
+    function findQuikTreeIds(
+      item: TreeMultidimensionalQuikArray<T>,
+      parentId: number
+    ): boolean {
+      for (let i = 0; i < item.length; i++) {
+        const currentItem = item[i] as any;
+
+        if (currentItem.id === id) {
+          result.push(currentItem.quikTreeId);
+          return true;
+        }
+
+        const childNodes = this.getChildNodes(currentItem);
+        const currentQuikTreeId = currentItem.quikTreeId;
+
+        if (childNodes && childNodes.length > 0) {
+          result.push(currentQuikTreeId);
+          if (findQuikTreeIds(childNodes, currentQuikTreeId)) {
+            return true;
+          }
+          result.pop();
+        }
+      }
+
+      return false;
+    }
+
+    if (findQuikTreeIds(data, 0)) {
+      return result;
+    }
+
+    return null;
   }
 }
 
@@ -130,3 +181,43 @@ export type TreeMultidimensionalQuikArray<
 export type TreeMultidimensionalQuik<T, K extends string = 'child'> = T & {
   [P in K]?: TreeMultidimensionalQuikArray<T, K>;
 } & { quikTreeId: number };
+
+// function getQuikTreeIdsById<T>(
+//   id: string,
+//   data: TreeMultidimensionalQuikArray<T>
+// ): number[] | null {
+//   const result: number[] = [];
+
+//   function findQuikTreeIds(
+//     item: TreeMultidimensionalQuikArray<T>,
+//     parentId: number
+//   ): boolean {
+//     for (let i = 0; i < item.length; i++) {
+//       const currentItem = item[i] as any;
+
+//       if (currentItem.id === id) {
+//         result.push(currentItem.quikTreeId);
+//         return true;
+//       }
+
+//       const childNodes = currentItem.child;
+//       const currentQuikTreeId = currentItem.quikTreeId;
+
+//       if (childNodes && childNodes.length > 0) {
+//         result.push(currentQuikTreeId);
+//         if (findQuikTreeIds(childNodes, currentQuikTreeId)) {
+//           return true;
+//         }
+//         result.pop();
+//       }
+//     }
+
+//     return false;
+//   }
+
+//   if (findQuikTreeIds(data, 0)) {
+//     return result;
+//   }
+
+//   return null;
+// }

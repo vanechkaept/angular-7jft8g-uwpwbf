@@ -8,13 +8,14 @@ import { ComComponent } from './com/com.component';
 import { TreeViewComponent } from './tree/tree-view.component';
 import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   /**
    * Don't use this approach,
    * it's a workaround for stackblitz
    */
-  imports: [BrowserModule, CommonModule],
+  imports: [BrowserModule, CommonModule, FormsModule],
   declarations: [AppComponent, ComComponent, TreeViewComponent],
   bootstrap: [AppComponent],
   providers: [

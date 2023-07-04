@@ -39,7 +39,7 @@ export class ComComponent<T> {
   // доработать как примитив, будут отправяться значение уникального поля
   @Input() openToFieldSubject: Subject<number | string>;
 
-  @Input() expandedNodes: Set<string>;
+  @Input() expandedNodes: Set<number>;
 
   @Input() trackBy: (i: number, item: T) => unknown =
     ComComponent._defaultTrackBy;
@@ -116,14 +116,14 @@ export class ComComponent<T> {
 
   toggleNode(node: TreeMultidimensionalQuik<T>) {
     if (this.nodeExpanded(node)) {
-      this.expandedNodes.delete(JSON.stringify(node.quikTreeId + ''));
+      this.expandedNodes.delete(node.quikTreeId);
     } else {
-      this.expandedNodes.add(JSON.stringify(node.quikTreeId + ''));
+      this.expandedNodes.add(node.quikTreeId);
     }
   }
 
   nodeExpanded(node: TreeMultidimensionalQuik<T>): boolean {
-    return this.expandedNodes.has(node.quikTreeId + '');
+    return this.expandedNodes.has(node.quikTreeId);
   }
 
   // expandAll() {

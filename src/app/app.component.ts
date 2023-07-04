@@ -10,8 +10,8 @@ import { TreeMultidimensionalArray } from './tree/tree-view.component';
 export class AppComponent<T> {
   collapseAll = new Subject<void>();
   expandAll = new Subject<void>();
-  openToFieldSubject = new Subject<string | number>();
-  input = '';
+  openToFieldSubject = new Subject<number>();
+  input: any = '';
   i = 7;
   nodes: Lists = [
     {
