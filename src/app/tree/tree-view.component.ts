@@ -98,7 +98,7 @@ export class TreeViewComponent<T> {
     // @ts-ignore
     return node[this.childKey] || undefined;
   }
-
+s
   checkChanges(): void {
     const d = JSON.parse(JSON.stringify(this.nodes));
     this._check$.next(d);
@@ -120,12 +120,15 @@ export class TreeViewComponent<T> {
     });
 
     this.openToFieldSubject?.subscribe((value) => {
-      const d = this.getQuikTreeIdsById(value, this._nodes);
+      console.log('------- value', value);
+      const d = this.getQuikTreeIdsById(value, this.uniqueField, this._nodes);
+      console.log('-------', d);
     });
   }
 
   getQuikTreeIdsById<T>(
-    id: number,
+    searchValue: any,
+    searchByKey: keyof T,
     data: TreeMultidimensionalQuikArray<T>
   ): number[] | null {
     const result: number[] = [];
@@ -135,9 +138,9 @@ export class TreeViewComponent<T> {
       parentId: number
     ): boolean {
       for (let i = 0; i < item.length; i++) {
-        const currentItem = item[i] as any;
+        const currentItem = item[i];
 
-        if (currentItem.id === id) {
+        if (currentItem[searchByKey] === searchValue) {
           result.push(currentItem.quikTreeId);
           return true;
         }
