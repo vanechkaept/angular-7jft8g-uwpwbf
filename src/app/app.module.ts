@@ -1,18 +1,21 @@
-import {NgModule} from '@angular/core';
-import {tuiSvgOptionsProvider, TUI_SANITIZER} from '@taiga-ui/core';
-import {NgDompurifySanitizer} from '@tinkoff/ng-dompurify';
+import { NgModule } from '@angular/core';
+import { tuiSvgOptionsProvider, TUI_SANITIZER } from '@taiga-ui/core';
+import { NgDompurifySanitizer } from '@tinkoff/ng-dompurify';
 
-import {ALL_TAIGA_UI_MODULES} from './@stackblitz/all-taiga-modules';
-import {AppComponent} from './app.component';
+import { ALL_TAIGA_UI_MODULES } from './@stackblitz/all-taiga-modules';
+import { AppComponent } from './app.component';
 import { ComComponent } from './com/com.component';
+import { TreeViewComponent } from './tree/tree-view.component';
+import { CommonModule } from '@angular/common';
+import { BrowserModule } from '@angular/platform-browser';
 
 @NgModule({
   /**
    * Don't use this approach,
    * it's a workaround for stackblitz
    */
-  imports: ALL_TAIGA_UI_MODULES,
-  declarations: [AppComponent, ComComponent],
+  imports: [BrowserModule, CommonModule],
+  declarations: [AppComponent, ComComponent, TreeViewComponent],
   bootstrap: [AppComponent],
   providers: [
     // A workaround because StackBlitz does not support assets

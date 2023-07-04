@@ -5,7 +5,7 @@
 <input [(ngModel)]="input" />
 <button (click)="findById()">find by id</button>
 
-<my-com
+<my-tree-view
   [nodes]="nodes"
   [collapseAllSubject]="collapseAll"
   [expandAllSubject]="expandAll"
@@ -13,12 +13,12 @@
   [expanded]="true"
   [uniqueField]="'id'"
   [openToFieldSubject]="openToFieldSubject"
-></my-com>
+></my-tree-view>
 
 <ng-template #itemContent let-data>
   {{ data.id }}
 </ng-template>
 
-<pre *ngIf="nodes">
+<!-- <pre *ngIf="nodes">
   {{ nodes | json }}
-</pre>
+</pre> -->
