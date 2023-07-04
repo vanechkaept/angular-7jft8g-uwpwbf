@@ -2,6 +2,8 @@
 <button (click)="addNode(nodes[2].child)">addNode 2</button>
 <button (click)="emit(expandAll)">expand all</button>
 <button (click)="collapseAll.next()">collapsed all</button>
+<input [(ngModel)]="input" />
+<button (click)="findById()">find by id</button>
 
 <my-com
   [nodes]="nodes"
@@ -9,6 +11,8 @@
   [expandAllSubject]="expandAll"
   [content]="itemContent"
   [expanded]="true"
+  [uniqueField]="'id'"
+  [openToFieldSubject]="openToFieldSubject"
 ></my-com>
 
 <ng-template #itemContent let-data>

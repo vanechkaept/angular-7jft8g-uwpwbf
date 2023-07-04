@@ -10,6 +10,8 @@ import { TreeMultidimensionalArray } from './com/com.component';
 export class AppComponent<T> {
   collapseAll = new Subject<void>();
   expandAll = new Subject<void>();
+  openToFieldSubject = new Subject<string | number>();
+  input = '';
   i = 7;
   nodes: Lists = [
     {
@@ -54,6 +56,10 @@ export class AppComponent<T> {
 
   emit(subject: Subject<void>) {
     subject.next();
+  }
+
+  findById() {
+    this.openToFieldSubject.next(this.input);
   }
 }
 
